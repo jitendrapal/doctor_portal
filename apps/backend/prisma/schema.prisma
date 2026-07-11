@@ -1,0 +1,881 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRoleType {
+  DOCTOR
+  SPECIALIST
+  NURSE
+  MEDICAL_STUDENT
+  HOSPITAL
+  CLINIC
+  RESEARCHER
+  HEALTHCARE_RECRUITER
+  HEALTHCARE_COMPANY
+  MEDICAL_DEVICE_COMPANY
+  ADMIN
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum ReactionType {
+  LIKE
+  CELEBRATE
+  SUPPORT
+  INSIGHTFUL
+}
+
+enum ModerationStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  REJECTED
+}
+
+model User {
+  id                String               @id @default(cuid())
+  email             String               @unique
+  hashedPassword    String
+  firstName         String
+  lastName          String
+  isVerified        Boolean              @default(false)
+  verificationBadge Boolean              @default(false)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  profile           Profile?
+  userRoles         UserRole[]
+  posts             Post[]               @relation("PostAuthor")
+  comments          Comment[]
+  reactions         Reaction[]
+  notifications     Notification[]       @relation("NotificationRecipient")
+  sentConnections   Connection[]         @relation("ConnectionRequester")
+  receivedConnections Connection[]       @relation("ConnectionAddressee")
+  followers         Follower[]           @relation("Followee")
+  following         Follower[]           @relation("Follower")
+  sessions          SessionToken[]
+  mfaMethods        MfaMethod[]
+  oauthAccounts     OAuthAccount[]
+  messages          Message[]
+  profileViews      ProfileView[]        @relation("ProfileViewTarget")
+  viewedProfiles    ProfileView[]        @relation("ProfileViewer")
+}
+
+model Profile {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  profilePictureUrl    String?
+  coverPhotoUrl        String?
+  qualification        String?
+  specialization       String?
+  yearsOfExperience    Int?
+  hospitalName         String?
+  clinicName           String?
+  country              String
+  city                 String?
+  biography            String?
+  skills               String[]
+  certificatesCount    Int       @default(0)
+  publicationsCount    Int       @default(0)
+  researchPapersCount  Int       @default(0)
+  medicalInterests     String[]
+  awards               String[]
+  languages            String[]
+  websiteUrl           String?
+  linkedinUrl          String?
+  medicalLicenseNumber String?
+  headline             String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  user                 User      @relation(fields: [userId], references: [id])
+}
+
+model UserRole {
+  id        String       @id @default(cuid())
+  userId    String
+  role      UserRoleType
+  createdAt DateTime     @default(now())
+  user      User         @relation(fields: [userId], references: [id])
+
+  @@unique([userId, role])
+}
+
+model SessionToken {
+  id         String   @id @default(cuid())
+  userId      String
+  tokenHash   String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model MfaMethod {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  secret      String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model OAuthAccount {
+  id               String   @id @default(cuid())
+  userId           String
+  provider         String
+  providerUserId   String
+  accessToken      String?
+  refreshToken     String?
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerUserId])
+}
+
+model VerificationRequest {
+  id          String           @id @default(cuid())
+  userId      String
+  documentUrl String
+  status      ModerationStatus @default(OPEN)
+  reviewerId  String?
+  createdAt   DateTime         @default(now())
+}
+
+model Connection {
+  id           String           @id @default(cuid())
+  requesterId  String
+  addresseeId  String
+  status       ConnectionStatus @default(PENDING)
+  createdAt    DateTime         @default(now())
+  requester    User             @relation("ConnectionRequester", fields: [requesterId], references: [id])
+  addressee    User             @relation("ConnectionAddressee", fields: [addresseeId], references: [id])
+
+  @@unique([requesterId, addresseeId])
+}
+
+model Follower {
+  id         String   @id @default(cuid())
+  followerId String
+  followeeId String
+  createdAt  DateTime @default(now())
+  follower   User     @relation("Follower", fields: [followerId], references: [id])
+  followee   User     @relation("Followee", fields: [followeeId], references: [id])
+
+  @@unique([followerId, followeeId])
+}
+
+model BlockedUser {
+  id           String   @id @default(cuid())
+  blockerId    String
+  blockedUserId String
+  createdAt    DateTime @default(now())
+}
+
+model MutedUser {
+  id          String   @id @default(cuid())
+  userId      String
+  mutedUserId String
+  createdAt   DateTime @default(now())
+}
+
+model Post {
+  id             String      @id @default(cuid())
+  authorId       String
+  content        String
+  visibility     String      @default("PUBLIC")
+  isAnonymous    Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  author         User        @relation("PostAuthor", fields: [authorId], references: [id])
+  media          PostMedia[]
+  comments       Comment[]
+  reactions      Reaction[]
+  bookmarks      Bookmark[]
+  reposts        Repost[]
+  hashtags       PostHashtag[]
+  mentions       Mention[]
+  poll           Poll?
+}
+
+model PostMedia {
+  id         String   @id @default(cuid())
+  postId     String
+  mediaType  String
+  url        String
+  createdAt  DateTime @default(now())
+  post       Post     @relation(fields: [postId], references: [id])
+}
+
+model Comment {
+  id         String         @id @default(cuid())
+  postId     String
+  authorId   String
+  content    String
+  createdAt  DateTime       @default(now())
+  post       Post           @relation(fields: [postId], references: [id])
+  author     User           @relation(fields: [authorId], references: [id])
+  replies    CommentReply[]
+}
+
+model CommentReply {
+  id          String   @id @default(cuid())
+  commentId   String
+  authorId    String
+  content     String
+  createdAt   DateTime @default(now())
+  comment     Comment  @relation(fields: [commentId], references: [id])
+}
+
+model Reaction {
+  id         String       @id @default(cuid())
+  postId     String
+  userId     String
+  type       ReactionType @default(LIKE)
+  createdAt  DateTime     @default(now())
+  post       Post         @relation(fields: [postId], references: [id])
+  user       User         @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  postId     String
+  userId     String
+  createdAt  DateTime @default(now())
+  post       Post     @relation(fields: [postId], references: [id])
+
+  @@unique([postId, userId])
+}
+
+model Repost {
+  id         String   @id @default(cuid())
+  postId     String
+  userId     String
+  commentary String?
+  createdAt  DateTime @default(now())
+  post       Post     @relation(fields: [postId], references: [id])
+
+  @@unique([postId, userId])
+}
+
+model Poll {
+  id          String       @id @default(cuid())
+  postId       String       @unique
+  question     String
+  closesAt     DateTime
+  createdAt    DateTime     @default(now())
+  post         Post         @relation(fields: [postId], references: [id])
+  options      PollOption[]
+}
+
+model PollOption {
+  id          String     @id @default(cuid())
+  pollId      String
+  label       String
+  poll        Poll       @relation(fields: [pollId], references: [id])
+  votes       PollVote[]
+}
+
+model PollVote {
+  id          String     @id @default(cuid())
+  optionId    String
+  userId      String
+  createdAt   DateTime   @default(now())
+  option      PollOption @relation(fields: [optionId], references: [id])
+}
+
+model Hashtag {
+  id          String       @id @default(cuid())
+  tag         String       @unique
+  createdAt   DateTime     @default(now())
+  posts       PostHashtag[]
+}
+
+model PostHashtag {
+  id         String   @id @default(cuid())
+  postId     String
+  hashtagId  String
+  post       Post     @relation(fields: [postId], references: [id])
+  hashtag    Hashtag  @relation(fields: [hashtagId], references: [id])
+
+  @@unique([postId, hashtagId])
+}
+
+model Mention {
+  id                String   @id @default(cuid())
+  postId            String
+  mentionedUserId   String
+  createdAt         DateTime @default(now())
+  post              Post     @relation(fields: [postId], references: [id])
+}
+
+model DraftPost {
+  id          String   @id @default(cuid())
+  authorId    String
+  content     String
+  updatedAt   DateTime @updatedAt
+}
+
+model ScheduledPost {
+  id            String   @id @default(cuid())
+  authorId      String
+  content       String
+  scheduledFor  DateTime
+  createdAt     DateTime @default(now())
+}
+
+model Group {
+  id          String        @id @default(cuid())
+  name        String
+  type        String
+  description String?
+  createdAt   DateTime      @default(now())
+  members     GroupMember[]
+  posts       GroupPost[]
+}
+
+model GroupMember {
+  id         String   @id @default(cuid())
+  groupId    String
+  userId     String
+  role       String
+  createdAt  DateTime @default(now())
+  group      Group    @relation(fields: [groupId], references: [id])
+
+  @@unique([groupId, userId])
+}
+
+model GroupPost {
+  id         String   @id @default(cuid())
+  groupId    String
+  postId     String
+  createdAt  DateTime @default(now())
+  group      Group    @relation(fields: [groupId], references: [id])
+}
+
+model MessageThread {
+  id             String              @id @default(cuid())
+  title          String?
+  isGroup        Boolean             @default(false)
+  createdAt      DateTime            @default(now())
+  participants   ThreadParticipant[]
+  messages       Message[]
+}
+
+model ThreadParticipant {
+  id          String        @id @default(cuid())
+  threadId    String
+  userId      String
+  joinedAt    DateTime      @default(now())
+  thread      MessageThread @relation(fields: [threadId], references: [id])
+
+  @@unique([threadId, userId])
+}
+
+model Message {
+  id          String        @id @default(cuid())
+  threadId    String
+  senderId    String
+  body        String
+  isRead      Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  thread      MessageThread @relation(fields: [threadId], references: [id])
+  sender      User          @relation(fields: [senderId], references: [id])
+  attachments MessageAttachment[]
+}
+
+model MessageAttachment {
+  id          String   @id @default(cuid())
+  messageId   String
+  fileType    String
+  fileUrl     String
+  message     Message  @relation(fields: [messageId], references: [id])
+}
+
+model CallSession {
+  id          String   @id @default(cuid())
+  threadId    String
+  startedById String
+  callType    String
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+}
+
+model TypingStatus {
+  id          String   @id @default(cuid())
+  threadId    String
+  userId      String
+  isTyping    Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+}
+
+model Hospital {
+  id          String               @id @default(cuid())
+  name        String
+  country     String
+  city        String
+  isVerified  Boolean              @default(false)
+  websiteUrl  String?
+  createdAt   DateTime             @default(now())
+  departments HospitalDepartment[]
+  reviews     HospitalReview[]
+  gallery     HospitalGallery[]
+  jobs        Job[]
+}
+
+model HospitalDepartment {
+  id          String   @id @default(cuid())
+  hospitalId  String
+  name        String
+  hospital    Hospital @relation(fields: [hospitalId], references: [id])
+}
+
+model HospitalReview {
+  id          String   @id @default(cuid())
+  hospitalId  String
+  reviewerId  String
+  rating      Int
+  review      String
+  createdAt   DateTime @default(now())
+  hospital    Hospital @relation(fields: [hospitalId], references: [id])
+}
+
+model HospitalGallery {
+  id          String   @id @default(cuid())
+  hospitalId  String
+  imageUrl    String
+  caption     String?
+  hospital    Hospital @relation(fields: [hospitalId], references: [id])
+}
+
+model Job {
+  id            String           @id @default(cuid())
+  hospitalId    String?
+  title         String
+  description   String
+  city          String
+  country       String
+  isActive      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  hospital      Hospital?         @relation(fields: [hospitalId], references: [id])
+  applications  JobApplication[]
+}
+
+model JobApplication {
+  id            String             @id @default(cuid())
+  jobId          String
+  applicantId    String
+  resumeUrl      String?
+  status         String             @default("SUBMITTED")
+  createdAt      DateTime           @default(now())
+  job            Job                @relation(fields: [jobId], references: [id])
+  interviews     InterviewSchedule[]
+  offer          JobOffer?
+}
+
+model InterviewSchedule {
+  id             String          @id @default(cuid())
+  applicationId  String
+  scheduledAt    DateTime
+  mode           String
+  application    JobApplication  @relation(fields: [applicationId], references: [id])
+}
+
+model JobOffer {
+  id             String          @id @default(cuid())
+  applicationId  String          @unique
+  offerDetails   String
+  status         String          @default("PENDING")
+  createdAt      DateTime        @default(now())
+  application    JobApplication  @relation(fields: [applicationId], references: [id])
+}
+
+model Resume {
+  id          String   @id @default(cuid())
+  userId      String
+  fileUrl     String
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+}
+
+model RecruiterProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  companyName String
+  bio         String?
+  createdAt   DateTime @default(now())
+}
+
+model ResearchPaper {
+  id             String               @id @default(cuid())
+  authorId        String
+  title           String
+  abstract        String
+  doi             String?              @unique
+  journal         String?
+  publishedAt     DateTime?
+  createdAt       DateTime             @default(now())
+  peerReviews     PeerReview[]
+  citations       Citation[]
+  bookmarks       ResearchBookmark[]
+  collaborations  ResearchCollaboration[]
+}
+
+model ResearchAuthor {
+  id             String   @id @default(cuid())
+  paperId        String
+  userId         String?
+  fullName       String
+  affiliation    String?
+}
+
+model PeerReview {
+  id             String        @id @default(cuid())
+  paperId        String
+  reviewerId     String
+  notes          String
+  rating         Int
+  createdAt      DateTime      @default(now())
+  paper          ResearchPaper @relation(fields: [paperId], references: [id])
+}
+
+model Citation {
+  id             String        @id @default(cuid())
+  paperId        String
+  citedBy        String
+  createdAt      DateTime      @default(now())
+  paper          ResearchPaper @relation(fields: [paperId], references: [id])
+}
+
+model DoiRecord {
+  id             String   @id @default(cuid())
+  paperId        String   @unique
+  doi            String   @unique
+  issuedAt       DateTime @default(now())
+}
+
+model ResearchBookmark {
+  id             String        @id @default(cuid())
+  paperId        String
+  userId         String
+  createdAt      DateTime      @default(now())
+  paper          ResearchPaper @relation(fields: [paperId], references: [id])
+
+  @@unique([paperId, userId])
+}
+
+model ResearchCollaboration {
+  id             String        @id @default(cuid())
+  paperId        String
+  collaboratorId String
+  role           String
+  paper          ResearchPaper @relation(fields: [paperId], references: [id])
+}
+
+model Event {
+  id            String      @id @default(cuid())
+  title         String
+  eventType     String
+  city          String
+  country       String
+  startAt       DateTime
+  endAt         DateTime
+  organizerId   String
+  createdAt     DateTime    @default(now())
+  tickets       EventTicket[]
+  rsvps         EventRsvp[]
+}
+
+model EventTicket {
+  id          String   @id @default(cuid())
+  eventId     String
+  tierName    String
+  priceCents  Int
+  capacity    Int
+  event       Event    @relation(fields: [eventId], references: [id])
+}
+
+model EventRsvp {
+  id          String   @id @default(cuid())
+  eventId     String
+  userId      String
+  status      String
+  createdAt   DateTime @default(now())
+  event       Event    @relation(fields: [eventId], references: [id])
+
+  @@unique([eventId, userId])
+}
+
+model WebinarSession {
+  id            String   @id @default(cuid())
+  eventId        String
+  streamUrl      String?
+  recordingUrl   String?
+}
+
+model TrainingProgram {
+  id            String   @id @default(cuid())
+  title         String
+  provider      String
+  cmeCredits    Float    @default(0)
+}
+
+model Workshop {
+  id            String   @id @default(cuid())
+  eventId       String
+  topic         String
+  seats         Int
+}
+
+model CalendarIntegration {
+  id            String   @id @default(cuid())
+  userId        String
+  provider      String
+  externalId    String
+  createdAt     DateTime @default(now())
+}
+
+model Course {
+  id            String             @id @default(cuid())
+  title         String
+  description   String
+  createdAt     DateTime           @default(now())
+  modules       CourseModule[]
+  enrollments   CourseEnrollment[]
+  quizzes       Quiz[]
+}
+
+model CourseModule {
+  id            String   @id @default(cuid())
+  courseId      String
+  title         String
+  videoUrl      String?
+  orderIndex    Int
+  course        Course   @relation(fields: [courseId], references: [id])
+}
+
+model CourseEnrollment {
+  id            String   @id @default(cuid())
+  courseId      String
+  userId        String
+  progress      Float    @default(0)
+  enrolledAt    DateTime @default(now())
+  course        Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([courseId, userId])
+}
+
+model CmeCredit {
+  id            String   @id @default(cuid())
+  userId        String
+  credits       Float
+  source        String
+  earnedAt      DateTime
+}
+
+model Quiz {
+  id            String         @id @default(cuid())
+  courseId      String
+  title         String
+  totalMarks    Int
+  course        Course         @relation(fields: [courseId], references: [id])
+  attempts      QuizAttempt[]
+}
+
+model QuizAttempt {
+  id            String   @id @default(cuid())
+  quizId        String
+  userId        String
+  score         Float
+  attemptedAt   DateTime @default(now())
+  quiz          Quiz     @relation(fields: [quizId], references: [id])
+}
+
+model Certificate {
+  id            String   @id @default(cuid())
+  userId        String
+  title         String
+  issuer        String
+  issueDate     DateTime
+  fileUrl       String?
+}
+
+model Notification {
+  id             String   @id @default(cuid())
+  recipientId    String
+  type           String
+  title          String
+  body           String
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  recipient      User     @relation("NotificationRecipient", fields: [recipientId], references: [id])
+}
+
+model NotificationPreference {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  likes         Boolean  @default(true)
+  comments      Boolean  @default(true)
+  mentions      Boolean  @default(true)
+  messages      Boolean  @default(true)
+  jobAlerts     Boolean  @default(true)
+}
+
+model PushDevice {
+  id            String   @id @default(cuid())
+  userId        String
+  platform      String
+  deviceToken   String   @unique
+  createdAt     DateTime @default(now())
+}
+
+model SubscriptionPlan {
+  id            String             @id @default(cuid())
+  code          String             @unique
+  name          String
+  priceCents    Int
+  durationDays  Int
+  createdAt     DateTime           @default(now())
+  subscriptions UserSubscription[]
+}
+
+model UserSubscription {
+  id            String           @id @default(cuid())
+  userId        String
+  planId        String
+  startDate     DateTime
+  endDate       DateTime
+  status        String
+  createdAt     DateTime         @default(now())
+  plan          SubscriptionPlan @relation(fields: [planId], references: [id])
+  payments      Payment[]
+}
+
+model Payment {
+  id             String           @id @default(cuid())
+  subscriptionId String
+  amountCents    Int
+  currency       String
+  status         String
+  paidAt         DateTime?
+  createdAt      DateTime         @default(now())
+  subscription   UserSubscription @relation(fields: [subscriptionId], references: [id])
+  invoice        Invoice?
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  paymentId     String   @unique
+  invoiceNumber String   @unique
+  pdfUrl        String?
+  createdAt     DateTime @default(now())
+  payment       Payment  @relation(fields: [paymentId], references: [id])
+}
+
+model Report {
+  id            String           @id @default(cuid())
+  reporterId    String
+  contentType   String
+  contentId     String
+  reason        String
+  status        ModerationStatus @default(OPEN)
+  createdAt     DateTime         @default(now())
+}
+
+model ContentModerationAction {
+  id            String   @id @default(cuid())
+  reportId      String
+  moderatorId   String
+  action        String
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  actorId       String
+  action        String
+  entityType    String
+  entityId      String
+  metadata      Json?
+  createdAt     DateTime @default(now())
+}
+
+model SearchIndex {
+  id            String   @id @default(cuid())
+  entityType    String
+  entityId      String
+  content       String
+  updatedAt     DateTime @updatedAt
+}
+
+model Advertisement {
+  id            String   @id @default(cuid())
+  advertiserId  String
+  title         String
+  imageUrl      String?
+  targetUrl     String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model FeatureFlag {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  enabled       Boolean  @default(false)
+  description   String?
+  updatedAt     DateTime @updatedAt
+}
+
+model SystemSetting {
+  id            String   @id @default(cuid())
+  settingKey    String   @unique
+  settingValue  String
+  updatedAt     DateTime @updatedAt
+}
+
+model TranslationJob {
+  id            String   @id @default(cuid())
+  userId        String
+  sourceText    String
+  sourceLang    String
+  targetLang    String
+  translatedText String?
+  createdAt     DateTime @default(now())
+}
+
+model AiUsageLog {
+  id            String   @id @default(cuid())
+  userId        String
+  feature       String
+  tokensUsed    Int
+  latencyMs     Int
+  createdAt     DateTime @default(now())
+}
+
+model FeedPreference {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  specialties   String[]
+  countries     String[]
+  contentTypes  String[]
+  updatedAt     DateTime @updatedAt
+}
+
+model ProfileView {
+  id            String   @id @default(cuid())
+  viewerId      String
+  viewedUserId  String
+  viewedAt      DateTime @default(now())
+  viewer        User     @relation("ProfileViewer", fields: [viewerId], references: [id])
+  viewedUser    User     @relation("ProfileViewTarget", fields: [viewedUserId], references: [id])
+}
