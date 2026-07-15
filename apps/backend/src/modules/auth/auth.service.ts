@@ -41,7 +41,7 @@ export class AuthService {
     return this.signTokens(
       user.id,
       user.email,
-      user.userRoles.map((r) => r.role),
+      user.userRoles.map((r: { role: string }) => r.role),
     );
   }
 
@@ -65,7 +65,7 @@ export class AuthService {
     return this.signTokens(
       user.id,
       user.email,
-      user.userRoles.map((r) => r.role),
+      user.userRoles.map((r: { role: string }) => r.role),
     );
   }
 

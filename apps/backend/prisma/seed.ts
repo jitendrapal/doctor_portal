@@ -1,4 +1,4 @@
-import { PrismaClient, UserRoleType } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
@@ -26,10 +26,7 @@ async function main(): Promise<void> {
         },
       },
       userRoles: {
-        create: [
-          { role: UserRoleType.DOCTOR },
-          { role: UserRoleType.SPECIALIST },
-        ],
+        create: [{ role: "DOCTOR" }, { role: "SPECIALIST" }],
       },
     },
   });
