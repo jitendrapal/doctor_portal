@@ -17,7 +17,8 @@ export function RequestsInbox() {
           Connection Requests
         </h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          Requests received by your active account. Accept or cancel, similar to LinkedIn invitations.
+          Requests received by your active account. Accept or cancel, similar to
+          LinkedIn invitations.
         </p>
       </Card>
 
