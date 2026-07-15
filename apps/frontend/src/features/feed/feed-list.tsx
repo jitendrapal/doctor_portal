@@ -226,11 +226,21 @@ export function FeedList() {
             Share a clinical update, research finding, or career opportunity.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Button size="default">Create Post</Button>
-            <Button variant="outline">Case Study</Button>
-            <Button variant="outline">Research Note</Button>
-            <Button variant="outline">Poll</Button>
-            <Button variant="outline">Image Post</Button>
+            <Link href="/compose/create-post">
+              <Button size="default">Create Post</Button>
+            </Link>
+            <Link href="/compose/case-study">
+              <Button variant="outline">Case Study</Button>
+            </Link>
+            <Link href="/compose/research-note">
+              <Button variant="outline">Research Note</Button>
+            </Link>
+            <Link href="/compose/poll">
+              <Button variant="outline">Poll</Button>
+            </Link>
+            <Link href="/compose/image-post">
+              <Button variant="outline">Image Post</Button>
+            </Link>
           </div>
         </div>
       </Card>
