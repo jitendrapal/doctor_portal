@@ -1,27 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
 import {
   Activity,
   Bell,
   BriefcaseMedical,
-  FlaskConical,
-  MessageCircle,
   UserRoundPlus,
   Users,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   useConnections,
   networkUsers,
 } from "@/features/network/connection-context";
 
-const links = [
+const links: { href: Route; label: string; icon: LucideIcon }[] = [
   { href: "/feed", label: "Feed", icon: Activity },
   { href: "/dashboard", label: "Dashboard", icon: Users },
   { href: "/jobs", label: "Jobs", icon: BriefcaseMedical },
   { href: "/requests", label: "Requests", icon: UserRoundPlus },
-  { href: "/research", label: "Research", icon: FlaskConical },
-  { href: "/messages", label: "Messages", icon: MessageCircle },
 ];
 
 export function Navbar() {

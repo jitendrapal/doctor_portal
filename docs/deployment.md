@@ -14,8 +14,23 @@
 ## Frontend
 
 - Recommended: Vercel
-- Build command: `pnpm --filter @medconnect/frontend build`
+- Local dev command: `corepack pnpm dev:frontend`
+- Build command: `corepack pnpm --filter @medconnect/frontend build`
 - Output: Next.js managed by Vercel runtime
+
+### Vercel Setup (Monorepo)
+
+1. Import the Git repository into Vercel.
+2. In Project Settings, set **Root Directory** to `apps/frontend`.
+3. Keep Framework Preset as **Next.js**.
+4. Add environment variables if needed:
+
+- `NEXT_PUBLIC_API_URL`
+- `NEXT_PUBLIC_APP_NAME`
+
+5. Deploy.
+
+This repository includes `apps/frontend/vercel.json` with explicit install/build/dev commands for pnpm workspaces.
 
 ## Backend
 

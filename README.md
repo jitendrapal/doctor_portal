@@ -69,6 +69,23 @@ MedConnect AI is an enterprise-ready social networking platform for doctors, hea
 5. Start apps:
    - `pnpm dev`
 
+### Run Frontend Locally Only
+
+1. Enable Corepack (once):
+   - `corepack enable`
+2. Install dependencies:
+   - `corepack pnpm install`
+3. Start frontend:
+   - `corepack pnpm dev:frontend`
+
+### Deploy Frontend to Vercel
+
+1. Import the repository in Vercel.
+2. Set Root Directory to `apps/frontend`.
+3. Framework Preset: `Next.js`.
+4. Add env vars if needed (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_NAME`).
+5. Deploy.
+
 ## Testing
 
 - Backend unit tests scaffolded with Jest.
