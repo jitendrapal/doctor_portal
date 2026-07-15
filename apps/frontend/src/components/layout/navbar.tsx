@@ -6,6 +6,7 @@ import {
   Activity,
   Bell,
   BriefcaseMedical,
+  MessageCircle,
   UserRoundPlus,
   Users,
 } from "lucide-react";
@@ -19,6 +20,7 @@ const links: { href: Route; label: string; icon: LucideIcon }[] = [
   { href: "/feed", label: "Feed", icon: Activity },
   { href: "/dashboard", label: "Dashboard", icon: Users },
   { href: "/jobs", label: "Jobs", icon: BriefcaseMedical },
+  { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/requests", label: "Requests", icon: UserRoundPlus },
 ];
 
@@ -59,6 +61,15 @@ export function Navbar() {
               </option>
             ))}
           </select>
+
+          <Link
+            href="/messages"
+            className="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+            aria-label="Open chat"
+            title="Open chat"
+          >
+            <MessageCircle className="h-5 w-5" />
+          </Link>
 
           <Link
             href="/requests"
