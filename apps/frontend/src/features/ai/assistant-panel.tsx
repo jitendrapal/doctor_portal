@@ -1,7 +1,12 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export function AssistantPanel() {
+  const router = useRouter();
+
   return (
     <Card>
       <h3 className="text-lg font-bold">Medical AI Assistant</h3>
@@ -10,9 +15,18 @@ export function AssistantPanel() {
         keywords, and translate clinical content.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="outline">Summarize Paper</Button>
-        <Button variant="outline">Generate Post</Button>
-        <Button variant="outline">Translate</Button>
+        <Button variant="outline" onClick={() => router.push("/ai/summarize")}>
+          Summarize Paper
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => router.push("/ai/generate-post")}
+        >
+          Generate Post
+        </Button>
+        <Button variant="outline" onClick={() => router.push("/ai/translate")}>
+          Translate
+        </Button>
       </div>
     </Card>
   );

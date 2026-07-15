@@ -1,3 +1,6 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Activity, Building2, Globe, TrendingUp, Users2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,18 +13,21 @@ const insightItems = [
 
 const companyPages = [
   {
+    slug: "medtronic-india",
     name: "Medtronic India",
     category: "Medical Device Company",
     followers: "412k followers",
     color: "from-sky-700 to-blue-500",
   },
   {
+    slug: "apollo-hospitals",
     name: "Apollo Hospitals",
     category: "Hospital Network",
     followers: "1.2M followers",
     color: "from-cyan-700 to-teal-500",
   },
   {
+    slug: "pfizer-healthcare",
     name: "Pfizer Healthcare",
     category: "Healthcare Company",
     followers: "892k followers",
@@ -36,6 +42,8 @@ const marketUpdates = [
 ];
 
 export function FeedRightSidebar() {
+  const router = useRouter();
+
   return (
     <div className="space-y-4">
       <Card>
@@ -85,7 +93,11 @@ export function FeedRightSidebar() {
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 {company.followers}
               </p>
-              <Button variant="outline" className="mt-2 h-8 w-full text-xs">
+              <Button
+                variant="outline"
+                className="mt-2 h-8 w-full text-xs"
+                onClick={() => router.push(`/companies/${company.slug}`)}
+              >
                 Follow Page
               </Button>
             </div>
