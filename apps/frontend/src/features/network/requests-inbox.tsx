@@ -7,7 +7,8 @@ import { getUserById } from "@/lib/mock-network";
 import { useConnections } from "@/features/network/connection-context";
 
 export function RequestsInbox() {
-  const { incomingRequests, acceptRequest, activeUserId } = useConnections();
+  const { incomingRequests, acceptRequest, cancelRequest, activeUserId } =
+    useConnections();
 
   return (
     <div className="space-y-4">
@@ -16,7 +17,7 @@ export function RequestsInbox() {
           Connection Requests
         </h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          Requests received by your active account.
+          Requests received by your active account. Accept or cancel, similar to LinkedIn invitations.
         </p>
       </Card>
 
@@ -60,6 +61,13 @@ export function RequestsInbox() {
                 <Button variant="outline">View Profile</Button>
               </Link>
               <Button onClick={() => acceptRequest(request.id)}>Accept</Button>
+              <Button
+                variant="ghost"
+                onClick={() => cancelRequest(request.id)}
+                className="text-slate-600"
+              >
+                Cancel
+              </Button>
             </div>
           </Card>
         );

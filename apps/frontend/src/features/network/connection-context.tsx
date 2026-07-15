@@ -26,6 +26,7 @@ type ConnectionContextValue = {
   requests: ConnectionRequest[];
   sendRequest: (toUserId: string) => void;
   acceptRequest: (requestId: string) => void;
+  cancelRequest: (requestId: string) => void;
   getPendingIncomingRequestIdFrom: (fromUserId: string) => string | null;
   getConnectionStatusWith: (
     otherUserId: string,
@@ -36,6 +37,23 @@ type ConnectionContextValue = {
 
 const REQUESTS_KEY = "medconnect-requests";
 const ACTIVE_USER_KEY = "medconnect-active-user";
+
+const defaultRequests: ConnectionRequest[] = [
+  {
+    id: "seed-request-nisha",
+    fromUserId: "u-nisha",
+    toUserId: "u-me",
+    status: "PENDING",
+    createdAt: new Date(Date.now() - 1000 * 60 * 75).toISOString(),
+  },
+  {
+    id: "seed-request-michael",
+    fromUserId: "u-michael",
+    toUserId: "u-me",
+    status: "PENDING",
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 18).toISOString(),
+  },
+];
 
 const ConnectionContext = createContext<ConnectionContextValue | null>(null);
 
@@ -49,6 +67,8 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
 
     if (savedRequests) {
       setRequests(JSON.parse(savedRequests) as ConnectionRequest[]);
+    } else {
+      setRequests(defaultRequests);
     }
 
     if (savedActiveUser && getUserById(savedActiveUser)) {
@@ -102,6 +122,19 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
         item.id === requestId && item.toUserId === activeUserId
           ? { ...item, status: "ACCEPTED" }
           : item,
+      ),
+    );
+  };
+
+  const cancelRequest = (requestId: string) => {
+    setRequests((prev) =>
+      prev.filter(
+        (item) =>
+          !(
+            item.id === requestId &&
+            item.status === "PENDING" &&
+            (item.toUserId === activeUserId || item.fromUserId === activeUserId)
+          ),
       ),
     );
   };
@@ -171,6 +204,7 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
         requests,
         sendRequest,
         acceptRequest,
+        cancelRequest,
         getPendingIncomingRequestIdFrom,
         getConnectionStatusWith,
         incomingRequests,
