@@ -7,8 +7,13 @@ import { getUserById } from "@/lib/mock-network";
 import { useConnections } from "@/features/network/connection-context";
 
 export function RequestsInbox() {
-  const { incomingRequests, acceptRequest, cancelRequest, activeUserId } =
-    useConnections();
+  const {
+    incomingRequests,
+    acceptRequest,
+    cancelRequest,
+    activeUserId,
+    loadDemoRequests,
+  } = useConnections();
 
   return (
     <div className="space-y-4">
@@ -25,8 +30,17 @@ export function RequestsInbox() {
       {incomingRequests.length === 0 ? (
         <Card>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            No pending requests.
+            No pending requests for this account right now.
           </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button variant="outline" onClick={loadDemoRequests}>
+              Load Demo Requests
+            </Button>
+            <p className="self-center text-xs text-slate-500 dark:text-slate-400">
+              Tip: switch "View as" user in the top navbar to see different
+              invitations.
+            </p>
+          </div>
         </Card>
       ) : null}
 

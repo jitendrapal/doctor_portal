@@ -24,6 +24,7 @@ type ConnectionContextValue = {
   activeUserId: string;
   setActiveUserId: (userId: string) => void;
   requests: ConnectionRequest[];
+  loadDemoRequests: () => void;
   sendRequest: (toUserId: string) => void;
   acceptRequest: (requestId: string) => void;
   cancelRequest: (requestId: string) => void;
@@ -38,20 +39,27 @@ type ConnectionContextValue = {
 const REQUESTS_KEY = "medconnect-requests";
 const ACTIVE_USER_KEY = "medconnect-active-user";
 
-const defaultRequests: ConnectionRequest[] = [
+const createDemoRequests = (): ConnectionRequest[] => [
   {
-    id: "seed-request-nisha",
+    id: "seed-request-nisha-to-me",
     fromUserId: "u-nisha",
     toUserId: "u-me",
     status: "PENDING",
     createdAt: new Date(Date.now() - 1000 * 60 * 75).toISOString(),
   },
   {
-    id: "seed-request-michael",
+    id: "seed-request-michael-to-nisha",
     fromUserId: "u-michael",
-    toUserId: "u-me",
+    toUserId: "u-nisha",
     status: "PENDING",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 18).toISOString(),
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
+  },
+  {
+    id: "seed-request-me-to-michael",
+    fromUserId: "u-me",
+    toUserId: "u-michael",
+    status: "PENDING",
+    createdAt: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
   },
 ];
 
@@ -66,9 +74,18 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
     const savedActiveUser = localStorage.getItem(ACTIVE_USER_KEY);
 
     if (savedRequests) {
-      setRequests(JSON.parse(savedRequests) as ConnectionRequest[]);
+      try {
+        const parsed = JSON.parse(savedRequests) as ConnectionRequest[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setRequests(parsed);
+        } else {
+          setRequests(createDemoRequests());
+        }
+      } catch {
+        setRequests(createDemoRequests());
+      }
     } else {
-      setRequests(defaultRequests);
+      setRequests(createDemoRequests());
     }
 
     if (savedActiveUser && getUserById(savedActiveUser)) {
@@ -87,6 +104,10 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
 
     setActiveUserIdState(userId);
     localStorage.setItem(ACTIVE_USER_KEY, userId);
+  };
+
+  const loadDemoRequests = () => {
+    setRequests(createDemoRequests());
   };
 
   const sendRequest = (toUserId: string) => {
@@ -202,6 +223,7 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
         activeUserId,
         setActiveUserId,
         requests,
+        loadDemoRequests,
         sendRequest,
         acceptRequest,
         cancelRequest,
